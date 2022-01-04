@@ -1,0 +1,22 @@
+{
+  "name": "word-koa",
+  "version": "1.0.0",
+  "description": "给背单词用的node服务",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=dev nodemon /src/app.js"
+  },
+  "author": "senlin",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.13.4",
+    "koa-bodyparser": "^4.3.0",
+    "koa-json-error": "^3.1.2",
+    "koa-parameter": "^3.0.1",
+    "koa-router": "^10.1.1"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "nodemon": "^2.0.14"
+  }
+}
