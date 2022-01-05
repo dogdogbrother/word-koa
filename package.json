@@ -4,16 +4,21 @@
   "description": "给背单词用的node服务",
   "main": "src/app.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=dev nodemon /src/app.js"
+    "dev": "cross-env NODE_ENV=dev nodemon /src/app.js",
+    "sync:f": "node ./src/db/sync.js"
   },
   "author": "senlin",
   "license": "ISC",
   "dependencies": {
+    "jsonwebtoken": "^8.5.1",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-json-error": "^3.1.2",
+    "koa-jwt": "^4.0.3",
     "koa-parameter": "^3.0.1",
-    "koa-router": "^10.1.1"
+    "koa-router": "^10.1.1",
+    "mysql2": "^2.3.3",
+    "sequelize": "^6.12.5"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

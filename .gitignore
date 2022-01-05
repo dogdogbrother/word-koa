@@ -10,4 +10,4 @@ yarn.lock
 # Editor directories and files
 .idea
 .vscode
-_password_.js
+secretKeys.js

@@ -2,9 +2,11 @@ const seq = require('../db/seq')
 const { STRING } = require('../db/types')
 
 const User = seq.define('user', {
-  id: {
+  username: {
     type: STRING,
-    primaryKey: true
+    allowNull: false,
+    unique: true,
+    comment: '用户名'
   },
   password: {
     type: STRING,

@@ -1,10 +1,10 @@
 const { isProd } = require('../utils/env')
-const { DEV_MYSQL_KEY, PROD_MYSQL_KEY } = require('../_password_')
+const { DEV_MYSQL_KEY, PROD_MYSQL_KEY } = require('../conf/secretKeys')
 let MYSQL_CONF = {
   user: 'root',
   password: DEV_MYSQL_KEY,
   port: '3306',
-  database: 'mysql'
+  database: 'words'
 }
 
 if (isProd) {
