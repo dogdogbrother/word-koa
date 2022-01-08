@@ -1,4 +1,4 @@
-const { User } = require('../models/index');
+const { User } = require('../models/index')
 const doCrypto = require('../utils/cryp')
 const { _JWT_KEY_ } = require('../conf/secretKeys')
 const Sequelize = require('sequelize');
@@ -23,14 +23,24 @@ class UsersCtl {
       }
     })
     if (repetitionUser) {
-      return ctx.throw(409,'用户名已占用')
+      return ctx.throw(409, '用户名已占用')
     }
-    const { username: _username } = await User.create({
+    const { username: _username, id } = await User.create({
       username,
       password: doCrypto(password),
     })
-    const token = jsonwebtoken.sign({ username: _username  }, _JWT_KEY_, { expiresIn: '20d' })
-    ctx.body = token
+    const token = jsonwebtoken.sign(
+      { 
+        username: _username,
+        id: id
+      },
+      _JWT_KEY_,
+      { expiresIn: '20d' }
+    )
+    ctx.body = {
+      token,
+      username
+    }
   }
 
   // 登录
@@ -41,20 +51,34 @@ class UsersCtl {
     })
     const { username, password } = ctx.request.body
     const user = await User.findOne({
-      attributes: ['username', 'id', ],
+      attributes: ['username', 'id' ],
       where: {
         [Op.and]: [{ username },{ password: doCrypto(password) }]
       }
     })
     if (user) {
-      console.log(user.dataValues.username);
-      const token = jsonwebtoken.sign({ username: user.dataValues.username }, _JWT_KEY_, { expiresIn: '20d' })
+      const token = jsonwebtoken.sign(
+        { 
+          username: user.dataValues.username,
+          id: user.dataValues.id
+        }, 
+        _JWT_KEY_, 
+        { expiresIn: '20d' }
+      )
       ctx.body = {
         ...user.dataValues,
         token
       }
     } else {
       return ctx.throw(403, '账户名或者密码错误')
+    }
+  }
+
+  // 用户信息
+  async info(ctx) {
+    const { username } = ctx.state.user
+    ctx.body = {
+      username
     }
   }
 }
