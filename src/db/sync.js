@@ -11,7 +11,7 @@ seq.authenticate().then(() => {
  * @description 执行同步
  * @param Object alter 会尽量的去修正表的内容,force 会强制重置表内容
  */
-seq.sync({ alter: true }).then(() => {
+seq.sync({ force: true }).then(() => {
   console.log('sync ok')
   process.exit()
 })

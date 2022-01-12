@@ -7,5 +7,6 @@ module.exports = {
   INTEGER: Sequelize.INTEGER,
   BOOLEAN: Sequelize.BOOLEAN,
   ENUM: Sequelize.ENUM,
-  BIGINT: Sequelize.BIGINT
+  BIGINT: Sequelize.BIGINT,
+  DATE: Sequelize.DATE,
 }

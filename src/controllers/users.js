@@ -1,4 +1,4 @@
-const { User } = require('../models/index')
+const { User, Word } = require('../models/index')
 const doCrypto = require('../utils/cryp')
 const { _JWT_KEY_ } = require('../conf/secretKeys')
 const Sequelize = require('sequelize');
@@ -17,18 +17,17 @@ class UsersCtl {
     if (password !== affirmPassword) {
       return ctx.throw(403, '两次密码输入不一致')
     }
-    const repetitionUser = await User.findOne({
+    const [{username: _username, id}, created] = await User.findOrCreate({
       where: {
         username
+      },
+      defaults: {
+        password: doCrypto(password),
       }
     })
-    if (repetitionUser) {
+    if (!created) {
       return ctx.throw(409, '用户名已占用')
     }
-    const { username: _username, id } = await User.create({
-      username,
-      password: doCrypto(password),
-    })
     const token = jsonwebtoken.sign(
       { 
         username: _username,

@@ -1,11 +1,15 @@
-const { Note } = require('../models/index')
-const { _JWT_KEY_ } = require('../conf/secretKeys')
+const { Note, User } = require('../models/index')
 
 class NotesCtl {
+  // 单词本列表
   async list(ctx) {
-
+    const notes = await Note.findAll({
+      include: [{ model: User }]
+    })
+    ctx.body = notes
   }
 
+  // 新建单词本
   async add(ctx) {
     ctx.verifyParams({
       noteName: { type: 'string', required: true },
