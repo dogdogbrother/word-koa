@@ -1,10 +1,26 @@
-const { Note, User } = require('../models/index')
+const { Note, User, Word } = require('../models/index')
+const Sequelize = require('sequelize')
 
 class NotesCtl {
   // 单词本列表
   async list(ctx) {
     const notes = await Note.findAll({
-      include: [{ model: User }]
+      attributes: {
+        include: [
+          [
+            Sequelize.literal(`(
+              select count(*)
+              from words as word
+              where
+                word.noteId = note.id
+            )`),
+            'wordCount'
+          ]
+        ]
+      },
+      include: [
+        { model: User },
+      ]
     })
     ctx.body = notes
   }

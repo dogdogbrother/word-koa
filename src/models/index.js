@@ -14,6 +14,10 @@ Word.belongsTo(Note, {
   foreignKey: 'noteId'
 })
 
+Note.hasMany(Word, {
+  foreignKey: 'noteId'
+})
+
 module.exports = {
   User,
   Note,

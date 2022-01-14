@@ -11,3 +11,4 @@ yarn.lock
 .idea
 .vscode
 secretKeys.js
+assets
