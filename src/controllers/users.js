@@ -1,10 +1,10 @@
-const { User, Word } = require('../models/index')
+const { User, Square } = require('../models/index')
 const doCrypto = require('../utils/cryp')
 const { _JWT_KEY_ } = require('../conf/secretKeys')
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op
-// const uuid = require('node-uuid');
 const jsonwebtoken = require('jsonwebtoken')
+
 class UsersCtl {
   // 注册
   async register(ctx) {
@@ -17,12 +17,20 @@ class UsersCtl {
     if (password !== affirmPassword) {
       return ctx.throw(403, '两次密码输入不一致')
     }
-    const [{username: _username, id}, created] = await User.findOrCreate({
+    const avatarLength = 20
+    const avatarIndex = Math.round(Math.random() * avatarLength)
+
+    const [
+      {username: _username, id, nickname: searchNickName, avatar}, 
+      created
+    ] = await User.findOrCreate({
       where: {
         username
       },
       defaults: {
         password: doCrypto(password),
+        avatar: avatarIndex,
+        nickname: username
       }
     })
     if (!created) {
@@ -30,16 +38,22 @@ class UsersCtl {
     }
     const token = jsonwebtoken.sign(
       { 
-        username: _username,
-        id: id
+        id,
       },
       _JWT_KEY_,
       { expiresIn: '20d' }
     )
     ctx.body = {
       token,
-      username
+      nickname: searchNickName,
+      avatar,
+      id
     }
+    // 加入广场状态中去
+    Square.create({
+      type: '1',
+      userId: id
+    })
   }
 
   // 登录
@@ -49,8 +63,8 @@ class UsersCtl {
       password: { type: 'string', required: true },
     })
     const { username, password } = ctx.request.body
-    const user = await User.findOne({
-      attributes: ['username', 'id' ],
+    const { nickname, id, avatar } = await User.findOne({
+      attributes: ['username', 'id', 'nickname', 'avatar' ],
       where: {
         [Op.and]: [{ username },{ password: doCrypto(password) }]
       }
@@ -58,14 +72,15 @@ class UsersCtl {
     if (user) {
       const token = jsonwebtoken.sign(
         { 
-          username: user.dataValues.username,
-          id: user.dataValues.id
+          id,
         }, 
         _JWT_KEY_, 
         { expiresIn: '20d' }
       )
       ctx.body = {
-        ...user.dataValues,
+        nickname,
+        id,
+        avatar,
         token
       }
     } else {
@@ -75,10 +90,9 @@ class UsersCtl {
 
   // 用户信息
   async info(ctx) {
-    const { username } = ctx.state.user
-    ctx.body = {
-      username
-    }
+    const { id } = ctx.state.user
+    const user = await User.findByPk(id)
+    ctx.body = user
   }
 }
 

@@ -1,5 +1,9 @@
 const { Word } = require('../models/index')
 const Op = require('sequelize').Op
+const { v4: uuidv4 } = require('uuid')
+const crypto = require('crypto')
+const axios = require('axios')
+const { YOUDAO_KEY, YOUDAO_SECRET } = require('../conf/secretKeys')
 
 const YOUDAO_URL = 'https://openapi.youdao.com/api'
 
@@ -11,7 +15,6 @@ class WordCtl {
       noteId: { type: 'string', required: true },
     })
     const { noteId } = ctx.params
-    console.log(noteId);
     const words = await Word.findAll({
       where: {
         noteId
@@ -69,11 +72,37 @@ class WordCtl {
 
   // 获取有道词典对单词的翻译
   async youdao(ctx) {
+
     ctx.verifyParams({
       word: { type: 'string', required: true }
     })
-    // 文档地址 https://ai.youdao.com/DOCSIRMA/html/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E7%BF%BB%E8%AF%91/API%E6%96%87%E6%A1%A3/%E6%96%87%E6%9C%AC%E7%BF%BB%E8%AF%91%E6%9C%8D%E5%8A%A1/%E6%96%87%E6%9C%AC%E7%BF%BB%E8%AF%91%E6%9C%8D%E5%8A%A1-API%E6%96%87%E6%A1%A3.html#section-9
-    // YOUDAO_URL
+
+    const { word } = ctx.request.body
+
+    const salt = uuidv4()
+    const curtime = Math.round(new Date().getTime() / 1000)
+    const str = YOUDAO_KEY + word + salt + curtime + YOUDAO_SECRET
+    const hash = crypto.createHash('sha256').update(str)
+    const sign = hash.digest('hex')
+    
+    const res = await axios({
+      method: 'POST',
+      url: YOUDAO_URL,
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      params: {
+        q: word,
+        from: 'en',
+        to: 'zh-CHS',
+        appKey: YOUDAO_KEY,
+        salt,
+        sign,
+        signType: 'v3',
+        curtime,
+      }
+    }).then(res => res.data)
+    // 发音地址,确定下过期时间,再设计表
+    // https://openapi.youdao.com/ttsapi?q=my+name+is&langType=en&sign=4B1F13245E4FE18979122B64D5263BFF&salt=1642232174197&voice=4&format=mp3&appKey=32c6f51ea1dd8a73&ttsVoiceStrict=false
+    ctx.body = res
   }
 }
 

@@ -1,4 +1,4 @@
-const { Note, User, Word } = require('../models/index')
+const { Note, User, Square } = require('../models/index')
 const Sequelize = require('sequelize')
 
 class NotesCtl {
@@ -39,14 +39,24 @@ class NotesCtl {
       }
     })
     if (repetitionNote) {
-      return ctx.throw(409, '用户名已占用')
+      return ctx.throw(409, '单词本名已被占用')
     }
-    await Note.create({
+
+    const coverLength = 16
+    const noteCover = Math.round(Math.random() * coverLength)
+
+    const { id } = await Note.create({
       noteName,
       noteSummary,
-      userId
+      userId,
+      noteCover
     })
     ctx.body = 201
+    // 加入广场动态
+    Square.create({
+      type: '2',
+      noteId: id
+    })
   }
 }
 

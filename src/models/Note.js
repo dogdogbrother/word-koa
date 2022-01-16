@@ -18,6 +18,11 @@ const Note = seq.define('note', {
     allowNull: false,
     comment: '单词本名描述'
   },
+  noteCover: {
+    type: STRING,
+    allowNull: false,
+    comment: '单词本封面索引'
+  }
 })
 
 module.exports = Note

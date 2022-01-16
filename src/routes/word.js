@@ -7,12 +7,12 @@ const router = new Router({prefix:'/word'})
 
 const auth = jwt({ secret: _JWT_KEY_ })
 
-router.get('/:noteId', auth, list)
+router.get('/list/:noteId', auth, list)
 
-router.post('/', auth, add)
+router.post('/add', auth, add)
 
-router.get('/:noteId/:word', checkWordExist)
+router.get('/:noteId/:word', auth, checkWordExist)
 
-router.get('/youdao/:word', youdao)
+router.post('/youdao', auth, youdao)
 
 module.exports = router

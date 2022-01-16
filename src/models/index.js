@@ -1,6 +1,7 @@
 const User = require('./User')
 const Note = require('./Note')
 const Word = require('./Word')
+const Square = require('./Square')
 
 Note.belongsTo(User, {
   foreignKey: 'userId'
@@ -18,8 +19,17 @@ Note.hasMany(Word, {
   foreignKey: 'noteId'
 })
 
+Square.belongsTo(Note, {
+  foreignKey: 'noteId'
+})
+
+Square.belongsTo(User, {
+  foreignKey: 'userId'
+})
+
 module.exports = {
   User,
   Note,
-  Word
+  Word,
+  Square
 }
