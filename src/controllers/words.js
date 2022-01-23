@@ -1,4 +1,4 @@
-const { Word } = require('../models/index')
+const { Word, Youdao } = require('../models/index')
 const Op = require('sequelize').Op
 const { v4: uuidv4 } = require('uuid')
 const crypto = require('crypto')
@@ -70,18 +70,37 @@ class WordCtl {
     } else ctx.status = 200
   }
 
-  // 获取有道词典对单词的翻译
+  // 获取有道词典对单词的翻译,先要找下数据库,找不到再请求有道API,在存数据库里面去
   async youdao(ctx) {
-
     ctx.verifyParams({
       word: { type: 'string', required: true }
     })
 
-    const { word } = ctx.request.body
-
+    const { word: request_word  } = ctx.request.body
+    const searchWrod = await Youdao.findOne({
+      where: {
+        [Op.or]: [
+          {
+            word: request_word,
+          },
+          {
+            returnPhrase: request_word
+          }
+        ]
+      }
+    })
+    // 如果能搜到结果,直接给用户即可
+    if (searchWrod) {
+      const { explains, web, ...rest } = searchWrod.dataValues
+      return ctx.body = {
+        ...rest,
+        explains: JSON.parse(explains),
+        web: web ? JSON.parse(web) : null
+      }
+    }
     const salt = uuidv4()
     const curtime = Math.round(new Date().getTime() / 1000)
-    const str = YOUDAO_KEY + word + salt + curtime + YOUDAO_SECRET
+    const str = YOUDAO_KEY + request_word + salt + curtime + YOUDAO_SECRET
     const hash = crypto.createHash('sha256').update(str)
     const sign = hash.digest('hex')
     
@@ -90,7 +109,7 @@ class WordCtl {
       url: YOUDAO_URL,
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       params: {
-        q: word,
+        q: request_word,
         from: 'en',
         to: 'zh-CHS',
         appKey: YOUDAO_KEY,
@@ -100,9 +119,53 @@ class WordCtl {
         curtime,
       }
     }).then(res => res.data)
-    // 发音地址,确定下过期时间,再设计表
-    // https://openapi.youdao.com/ttsapi?q=my+name+is&langType=en&sign=4B1F13245E4FE18979122B64D5263BFF&salt=1642232174197&voice=4&format=mp3&appKey=32c6f51ea1dd8a73&ttsVoiceStrict=false
-    ctx.body = res
+    const { 
+      errorCode,
+      word, 
+      isWord, 
+      translation, 
+      webdict, 
+      speakUrl, 
+      basic, 
+      returnPhrase,
+      web
+    } = res
+    if (errorCode !== "0") {
+      return ctx.throw(400, '翻译失败了呀,请检查下单词是否正常')
+    }
+    // 用于存最后放在数据库里面的对象
+    const _youdao_ = { 
+      isWord, 
+      translation: translation.join(','), 
+      webdict: 
+      webdict.url, speakUrl 
+    }
+    
+    if (isWord) {
+      _youdao_.explains = JSON.stringify(basic.explains)
+      _youdao_.ukPhonetic = basic['uk-phonetic']
+      _youdao_.ukSpeech = basic['uk-speech']
+      _youdao_.usPhonetic = basic['us-phonetic']
+      _youdao_.usSpeech = basic['us-speech']
+    }
+    if (returnPhrase) {
+      _youdao_.word = returnPhrase[0]
+    } else if (word) {
+      _youdao_.word = word[0] 
+    } else {
+      // 不是单词 也不是短语的内容,没有 returnPhrase 和 word
+      _youdao_.word = request_word
+    }
+    if (web) {
+      _youdao_.web = web ? JSON.stringify(web) : null
+    }
+    const saveWord = await Youdao.create(_youdao_)
+    const { explains, web: _web, ...rest } = saveWord.dataValues
+    ctx.body = {
+      ...rest,
+      explains: JSON.parse(explains),
+      web: _web ? JSON.parse(_web) : null
+    }
   }
 }
 

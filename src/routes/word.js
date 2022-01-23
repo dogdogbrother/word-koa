@@ -7,7 +7,7 @@ const router = new Router({prefix:'/word'})
 
 const auth = jwt({ secret: _JWT_KEY_ })
 
-router.get('/list/:noteId', auth, list)
+router.get('/list/:noteId', list)
 
 router.post('/add', auth, add)
 

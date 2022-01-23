@@ -29,7 +29,7 @@ class UsersCtl {
       },
       defaults: {
         password: doCrypto(password),
-        avatar: avatarIndex,
+        avatar: `http://localhost:3009/avatar/${avatarIndex}.jpeg`,
         nickname: username
       }
     })
@@ -63,13 +63,14 @@ class UsersCtl {
       password: { type: 'string', required: true },
     })
     const { username, password } = ctx.request.body
-    const { nickname, id, avatar } = await User.findOne({
+    const user = await User.findOne({
       attributes: ['username', 'id', 'nickname', 'avatar' ],
       where: {
         [Op.and]: [{ username },{ password: doCrypto(password) }]
       }
     })
     if (user) {
+      const { nickname, id, avatar } = user
       const token = jsonwebtoken.sign(
         { 
           id,
@@ -92,6 +93,13 @@ class UsersCtl {
   async info(ctx) {
     const { id } = ctx.state.user
     const user = await User.findByPk(id)
+    ctx.body = user
+  }
+
+  // 查询某个用户信息
+  async userInfo(ctx) {
+    const { userId } = ctx.params
+    const user = await User.findByPk(userId)
     ctx.body = user
   }
 }
