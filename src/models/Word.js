@@ -15,14 +15,24 @@ const Word = seq.define('word', {
   word: {
     type: STRING,
     allowNull: false,
-    unique: true,
     comment: '单词名'
   },
-  chineseMeaning: {
+  wordMark: {
+    type: STRING,
+    allowNull: true,
+    comment: '单词笔记'
+  },
+  keyWord: {
     type: STRING,
     allowNull: false,
-    comment: '单词中译'
+    comment: '关联有道翻译API的'
   },
+  fileList: {
+    type: STRING,
+    allowNull: true,
+    default: '',
+    comment: '上次的图片'
+  }
 })
 
 module.exports = Word

@@ -1,4 +1,5 @@
 const { Square, User, Note } = require('../models/index')
+const Sequelize = require('sequelize')
 
 class SquareCtl {
   // 广场动态
@@ -7,8 +8,35 @@ class SquareCtl {
     const where = {}
     if (userId) where.userId = userId
     const squares = await Square.findAll({
+      order: [
+        ['createdAt', 'desc']
+      ],
       include: [
-        { model: User },
+        { 
+          model: User,
+          attributes: {
+            include: [
+              [
+                Sequelize.literal(`(
+                  select count(plan)
+                  from WordPlans as wordPlan 
+                  where
+                    userId = user.id
+                )`),
+                'allWord'
+              ],
+              [
+                Sequelize.literal(`(
+                  select count(plan)
+                  from WordPlans as wordPlan 
+                  where
+                    userId = user.id and wordPlan.plan = '6'
+                )`),
+                'masterWord'
+              ]
+            ]
+          }
+        },
         { model: Note }
       ],
       where
@@ -16,4 +44,5 @@ class SquareCtl {
     ctx.body = squares
   }
 }
+
 module.exports = new SquareCtl()

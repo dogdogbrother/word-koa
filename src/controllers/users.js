@@ -1,4 +1,4 @@
-const { User, Square } = require('../models/index')
+const { User, Square, WordPlan } = require('../models/index')
 const doCrypto = require('../utils/cryp')
 const { _JWT_KEY_ } = require('../conf/secretKeys')
 const Sequelize = require('sequelize');
@@ -18,7 +18,7 @@ class UsersCtl {
       return ctx.throw(403, '两次密码输入不一致')
     }
     const avatarLength = 20
-    const avatarIndex = Math.round(Math.random() * avatarLength)
+    const avatarIndex = Math.floor(Math.random() * avatarLength)
 
     const [
       {username: _username, id, nickname: searchNickName, avatar}, 
@@ -92,14 +92,82 @@ class UsersCtl {
   // 用户信息
   async info(ctx) {
     const { id } = ctx.state.user
-    const user = await User.findByPk(id)
+    const user = await User.findByPk(id, {
+      attributes: {
+        include: [
+          [
+            Sequelize.literal(`(
+              select noteId
+              from userNoteRelations
+              where
+                userId = ${id}
+            )`),
+            'useNote'
+          ],
+          // 完全掌握的单词
+          [
+            Sequelize.literal(`(
+              select count(plan)
+              from WordPlans as wordPlan 
+              where
+                userId = ${id} and wordPlan.plan = '6'
+            )`),
+            'masterWord'
+          ],
+          // 所有学习过的单词
+          [
+            Sequelize.literal(`(
+              select count(plan)
+              from WordPlans as wordPlan 
+              where
+                userId = ${id}
+            )`),
+            'allWord'
+          ],
+        ],
+      },
+    })
+    // 分组查询 所有学习单词的熟练度
+    const wordPlan = await WordPlan.count({
+      // attributes: ["keyWord"],
+      // where: {
+      //   id: 1
+      // },
+      // group: "keyWord",
+    })
+    console.log(wordPlan);
     ctx.body = user
   }
 
   // 查询某个用户信息
   async userInfo(ctx) {
     const { userId } = ctx.params
-    const user = await User.findByPk(userId)
+    const user = await User.findByPk(userId, {
+      attributes: {
+        include: [
+          // 完全掌握的单词
+          [
+            Sequelize.literal(`(
+              select count(plan)
+              from WordPlans as wordPlan 
+              where
+                userId = ${userId} and wordPlan.plan = '6'
+            )`),
+            'masterWord'
+          ],
+          // 所有学习过的单词
+          [
+            Sequelize.literal(`(
+              select count(plan)
+              from WordPlans as wordPlan 
+              where
+                userId = ${userId}
+            )`),
+            'allWord'
+          ],
+        ],
+      },
+    })
     ctx.body = user
   }
 }

@@ -21,7 +21,7 @@ const Note = seq.define('note', {
   noteCover: {
     type: STRING,
     allowNull: false,
-    comment: '单词本封面索引'
+    comment: '单词本封面地址'
   }
 })
 

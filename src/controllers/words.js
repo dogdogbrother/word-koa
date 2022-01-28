@@ -1,12 +1,7 @@
-const { Word, Youdao } = require('../models/index')
-const Op = require('sequelize').Op
-const { v4: uuidv4 } = require('uuid')
-const crypto = require('crypto')
-const axios = require('axios')
-const { YOUDAO_KEY, YOUDAO_SECRET } = require('../conf/secretKeys')
-
-const YOUDAO_URL = 'https://openapi.youdao.com/api'
-
+const { Word, Youdao, WordPlan } = require('../models/index')
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op
+const { getYoudaoAndFormat } = require('../server/word')
 class WordCtl {
 
   // 单词列表
@@ -15,9 +10,23 @@ class WordCtl {
       noteId: { type: 'string', required: true },
     })
     const { noteId } = ctx.params
+    const { id: userId } = ctx.state.user
+
     const words = await Word.findAll({
-      where: {
-        noteId
+      where: { noteId },
+      include: [{ model: Youdao }],
+      attributes: {
+        include: [
+          [
+            Sequelize.literal(`(
+              select plan
+              from wordPlans as wordPlan
+              where
+                wordPlan.wordId = word.id and ${userId} = word.userId
+            )`),
+            'plan'
+          ]
+        ]
       }
     })
     ctx.body = words
@@ -27,16 +36,14 @@ class WordCtl {
   async add(ctx) {
     ctx.verifyParams({
       word: { type: 'string', required: true },
-      chineseMeaning: { type: 'string', required: true },
-      noteId: { type: 'string', required: true }
+      noteId: { type: 'string', required: true },
+      keyWord: { type: 'string', required: true },
     })
     const { id: userId } = ctx.state.user
-    const { word, chineseMeaning, noteId } = ctx.request.body
+    const { word, wordMark, noteId, keyWord, fileList = [] } = ctx.request.body
     const repetitionWord = await Word.findOne({
       where: {
-        [Op.and]: [
-          { word }, { noteId }
-        ]
+        [Op.and]: [ { word }, { noteId } ]
       }
     })
     if (repetitionWord) {
@@ -44,9 +51,11 @@ class WordCtl {
     }
     await Word.create({
       word,
-      chineseMeaning,
+      wordMark,
       userId,
-      noteId
+      noteId,
+      keyWord,
+      fileList: fileList.join(',')
     })
     ctx.status = 201
   }
@@ -60,9 +69,7 @@ class WordCtl {
     const { noteId, word } = ctx.params
     const existWord = await Word.findOne({
       where: {
-        [Op.and]: [
-          { word }, { noteId }
-        ]
+        [Op.and]: [{ word }, { noteId }]
       }
     })
     if (existWord) {
@@ -75,18 +82,10 @@ class WordCtl {
     ctx.verifyParams({
       word: { type: 'string', required: true }
     })
-
     const { word: request_word  } = ctx.request.body
     const searchWrod = await Youdao.findOne({
       where: {
-        [Op.or]: [
-          {
-            word: request_word,
-          },
-          {
-            returnPhrase: request_word
-          }
-        ]
+        [Op.or]: [{ word: request_word }, { returnPhrase: request_word }]
       }
     })
     // 如果能搜到结果,直接给用户即可
@@ -94,70 +93,14 @@ class WordCtl {
       const { explains, web, ...rest } = searchWrod.dataValues
       return ctx.body = {
         ...rest,
-        explains: JSON.parse(explains),
+        explains: explains? JSON.parse(explains) : null,
         web: web ? JSON.parse(web) : null
       }
     }
-    const salt = uuidv4()
-    const curtime = Math.round(new Date().getTime() / 1000)
-    const str = YOUDAO_KEY + request_word + salt + curtime + YOUDAO_SECRET
-    const hash = crypto.createHash('sha256').update(str)
-    const sign = hash.digest('hex')
     
-    const res = await axios({
-      method: 'POST',
-      url: YOUDAO_URL,
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      params: {
-        q: request_word,
-        from: 'en',
-        to: 'zh-CHS',
-        appKey: YOUDAO_KEY,
-        salt,
-        sign,
-        signType: 'v3',
-        curtime,
-      }
-    }).then(res => res.data)
-    const { 
-      errorCode,
-      word, 
-      isWord, 
-      translation, 
-      webdict, 
-      speakUrl, 
-      basic, 
-      returnPhrase,
-      web
-    } = res
-    if (errorCode !== "0") {
+    const _youdao_ = await getYoudaoAndFormat(request_word)
+    if (_youdao_.error) {
       return ctx.throw(400, '翻译失败了呀,请检查下单词是否正常')
-    }
-    // 用于存最后放在数据库里面的对象
-    const _youdao_ = { 
-      isWord, 
-      translation: translation.join(','), 
-      webdict: 
-      webdict.url, speakUrl 
-    }
-    
-    if (isWord) {
-      _youdao_.explains = JSON.stringify(basic.explains)
-      _youdao_.ukPhonetic = basic['uk-phonetic']
-      _youdao_.ukSpeech = basic['uk-speech']
-      _youdao_.usPhonetic = basic['us-phonetic']
-      _youdao_.usSpeech = basic['us-speech']
-    }
-    if (returnPhrase) {
-      _youdao_.word = returnPhrase[0]
-    } else if (word) {
-      _youdao_.word = word[0] 
-    } else {
-      // 不是单词 也不是短语的内容,没有 returnPhrase 和 word
-      _youdao_.word = request_word
-    }
-    if (web) {
-      _youdao_.web = web ? JSON.stringify(web) : null
     }
     const saveWord = await Youdao.create(_youdao_)
     const { explains, web: _web, ...rest } = saveWord.dataValues
@@ -165,6 +108,68 @@ class WordCtl {
       ...rest,
       explains: JSON.parse(explains),
       web: _web ? JSON.parse(_web) : null
+    }
+  }
+
+  // 单词计划维护
+  async wordPlan(ctx) {
+    ctx.verifyParams({
+      // 0 陌生, 1 掌握, 2 模糊, 3 认识
+      action: { type: 'number', required: true },
+      keyWord: { type: 'string', required: true },
+    })
+    const { action, keyWord } = ctx.request.body
+    const { id: userId } = ctx.state.user
+    const findPlan = await WordPlan.findOne({
+      where: {
+        [Op.and]: [
+          { keyWord }, { userId }
+        ]
+      }
+    })
+    // 如果能找到此单词进度,根据 action 不同,对 plan 的值进行更新(也可能不需要更新,plan值达到边界了)
+    if (findPlan) {
+      let planNumber = null
+      const { plan, id } = findPlan.dataValues
+      // 对陌生的单词进行 陌生 或者 模糊 操作,等于没有操作
+      if ((action == 0 || action == 2) && plan == 0) {
+        return ctx.status = 204
+      }
+      // 对掌握的单词进行 掌握 或者 认识 操作,等于没有操作 (正常没有这种情况,容错)
+      if ((action == 1 || action == 3) && plan == 6) {
+        return ctx.status = 204
+      }
+      if (action == 0) {
+        planNumber = 0
+      }
+      if (action == 1) {
+        planNumber = 6
+      }
+      if (action == 2) {
+        planNumber = Number(plan) - 1
+      }
+      if (action == 3) {
+        planNumber = Number(plan) + 1
+      }
+      console.log("test", planNumber.toString());
+      await WordPlan.update(
+        {
+          plan: planNumber.toString()
+        },
+        {
+          where: {
+            id
+          }
+        }
+      )
+      return ctx.status = 204
+    } else {
+      await WordPlan.create({
+        userId,
+        plan: "0",
+        keyWord
+      })
+      ctx.status = 204
     }
   }
 }

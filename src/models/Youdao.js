@@ -22,7 +22,11 @@ const Youdao = seq.define('youdao', {
   explains: {
     type: STRING,
     allowNull: true,
-    comment: '单词的翻译,'
+    comment: '单词的翻译,',
+    get() {
+      const rawValue = this.getDataValue('explains')
+      return rawValue ? JSON.parse(rawValue) : []
+    }
   },
   // 能把大小写,多余的符号去除掉,所以,如果有这个值,这个值才是才是真正word
   returnPhrase: {
@@ -76,7 +80,11 @@ const Youdao = seq.define('youdao', {
   web: {
     type: STRING,
     allowNull: true,
-    comment: '词义,类似于短语'
+    comment: '词义,类似于短语',
+    get() {
+      const rawValue = this.getDataValue('web');
+      return rawValue ? JSON.parse(rawValue) : []
+    }
   },
 })
 
