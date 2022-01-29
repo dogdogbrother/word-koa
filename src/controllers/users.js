@@ -4,6 +4,7 @@ const { _JWT_KEY_ } = require('../conf/secretKeys')
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op
 const jsonwebtoken = require('jsonwebtoken')
+const HOST = require('../utils/host')
 
 class UsersCtl {
   // 注册
@@ -29,7 +30,7 @@ class UsersCtl {
       },
       defaults: {
         password: doCrypto(password),
-        avatar: `http://localhost:3009/avatar/${avatarIndex}.jpeg`,
+        avatar: `${HOST}/avatar/${avatarIndex}.jpeg`,
         nickname: username
       }
     })

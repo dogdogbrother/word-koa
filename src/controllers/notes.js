@@ -1,5 +1,6 @@
 const { Note, User, Square, UserNoteRelation } = require('../models/index')
 const Sequelize = require('sequelize')
+const HOST = require('../utils/host')
 
 class NotesCtl {
   // 单词本列表
@@ -54,7 +55,7 @@ class NotesCtl {
       noteName,
       noteSummary,
       userId,
-      noteCover: `http://localhost:3009/noteCard/${noteCover}.jpg`
+      noteCover: `${HOST}/noteCard/${noteCover}.jpg`
     })
     ctx.status = 201
     // 加入广场动态

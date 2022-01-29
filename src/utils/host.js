@@ -1,5 +1,5 @@
 const { isDev } = require('./env')
 
-const HOST = isDev ? "http://localhost" : "http://49.233.185.168"
+const HOST = isDev ? "http://localhost:7009" : "https:run-api.freetoplay.top"
 
 module.exports = HOST

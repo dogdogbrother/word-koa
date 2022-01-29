@@ -5,6 +5,7 @@
   "main": "src/app.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nodemon /src/app.js",
+    "start": "cross-env NODE_ENV=production node ./src/app.js",
     "sync": "node ./src/db/sync.js"
   },
   "author": "senlin",
