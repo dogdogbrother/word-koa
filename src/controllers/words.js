@@ -151,7 +151,6 @@ class WordCtl {
       if (action == 3) {
         planNumber = Number(plan) + 1
       }
-      console.log("test", planNumber.toString());
       await WordPlan.update(
         {
           plan: planNumber.toString()

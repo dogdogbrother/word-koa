@@ -13,5 +13,4 @@ app.use(parameter(app))
 app.use(static(__dirname + "/../assets"));
 
 routing(app)
-console.log(process.env.NODE_ENV);
-app.listen(7009, () => console.log('7009端口已经开启'))
+app.listen(7001, () => console.log('7001端口已经开启'))
