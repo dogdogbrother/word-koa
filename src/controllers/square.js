@@ -19,7 +19,7 @@ class SquareCtl {
               [
                 Sequelize.literal(`(
                   select count(plan)
-                  from WordPlans as wordPlan 
+                  from wordPlans as wordPlan 
                   where
                     userId = user.id
                 )`),
@@ -28,7 +28,7 @@ class SquareCtl {
               [
                 Sequelize.literal(`(
                   select count(plan)
-                  from WordPlans as wordPlan 
+                  from wordPlans as wordPlan 
                   where
                     userId = user.id and wordPlan.plan = '6'
                 )`),

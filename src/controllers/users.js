@@ -109,7 +109,7 @@ class UsersCtl {
           [
             Sequelize.literal(`(
               select count(plan)
-              from WordPlans as wordPlan 
+              from wordPlans as wordPlan 
               where
                 userId = ${id} and wordPlan.plan = '6'
             )`),
@@ -119,7 +119,7 @@ class UsersCtl {
           [
             Sequelize.literal(`(
               select count(plan)
-              from WordPlans as wordPlan 
+              from wordPlans as wordPlan 
               where
                 userId = ${id}
             )`),
@@ -129,14 +129,14 @@ class UsersCtl {
       },
     })
     // 分组查询 所有学习单词的熟练度
-    const wordPlan = await WordPlan.count({
+    // const wordPlan = await WordPlan.count({
       // attributes: ["keyWord"],
       // where: {
       //   id: 1
       // },
       // group: "keyWord",
-    })
-    console.log(wordPlan);
+    // })
+    // console.log(wordPlan);
     ctx.body = user
   }
 
@@ -150,7 +150,7 @@ class UsersCtl {
           [
             Sequelize.literal(`(
               select count(plan)
-              from WordPlans as wordPlan 
+              from wordPlans as wordPlan 
               where
                 userId = ${userId} and wordPlan.plan = '6'
             )`),
@@ -160,7 +160,7 @@ class UsersCtl {
           [
             Sequelize.literal(`(
               select count(plan)
-              from WordPlans as wordPlan 
+              from wordPlans as wordPlan 
               where
                 userId = ${userId}
             )`),
