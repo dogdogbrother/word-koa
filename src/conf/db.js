@@ -12,7 +12,7 @@ if (isProd) {
     user: 'root',
     password: PROD_MYSQL_KEY,
     port: '3306',
-    database: 'mysql'
+    database: 'words'
   }
 }
 module.exports = {
