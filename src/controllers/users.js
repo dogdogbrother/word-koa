@@ -5,7 +5,7 @@ const Sequelize = require('sequelize');
 const Op = Sequelize.Op
 const jsonwebtoken = require('jsonwebtoken')
 const HOST = require('../utils/host')
-
+const { getUserById } = require('../server/user')
 class UsersCtl {
   // 注册
   async register(ctx) {
@@ -18,7 +18,7 @@ class UsersCtl {
     if (password !== affirmPassword) {
       return ctx.throw(403, '两次密码输入不一致')
     }
-    const avatarLength = 20
+    const avatarLength = 19
     const avatarIndex = Math.floor(Math.random() * avatarLength)
 
     const [
@@ -93,41 +93,7 @@ class UsersCtl {
   // 用户信息
   async info(ctx) {
     const { id } = ctx.state.user
-    const user = await User.findByPk(id, {
-      attributes: {
-        include: [
-          [
-            Sequelize.literal(`(
-              select noteId
-              from userNoteRelations
-              where
-                userId = ${id}
-            )`),
-            'useNote'
-          ],
-          // 完全掌握的单词
-          [
-            Sequelize.literal(`(
-              select count(plan)
-              from wordPlans as wordPlan 
-              where
-                userId = ${id} and wordPlan.plan = '6'
-            )`),
-            'masterWord'
-          ],
-          // 所有学习过的单词
-          [
-            Sequelize.literal(`(
-              select count(plan)
-              from wordPlans as wordPlan 
-              where
-                userId = ${id}
-            )`),
-            'allWord'
-          ],
-        ],
-      },
-    })
+    const user = await getUserById(id)
     // 分组查询 所有学习单词的熟练度
     // const wordPlan = await WordPlan.count({
       // attributes: ["keyWord"],
@@ -143,32 +109,22 @@ class UsersCtl {
   // 查询某个用户信息
   async userInfo(ctx) {
     const { userId } = ctx.params
-    const user = await User.findByPk(userId, {
-      attributes: {
-        include: [
-          // 完全掌握的单词
-          [
-            Sequelize.literal(`(
-              select count(plan)
-              from wordPlans as wordPlan 
-              where
-                userId = ${userId} and wordPlan.plan = '6'
-            )`),
-            'masterWord'
-          ],
-          // 所有学习过的单词
-          [
-            Sequelize.literal(`(
-              select count(plan)
-              from wordPlans as wordPlan 
-              where
-                userId = ${userId}
-            )`),
-            'allWord'
-          ],
-        ],
-      },
+    const user = await getUserById(userId)
+    ctx.body = user
+  }
+
+  // 更新用户的个人信息,目前只有昵称和简介可以改
+  async update(ctx) {
+    const { id } = ctx.state.user
+    ctx.verifyParams({
+      nickname: { type: 'string', required: true },
     })
+    const { nickname, introduce } = ctx.request.body
+    await User.update(
+      { nickname, introduce },
+      { where: { id } }
+    )
+    const user = await getUserById(id)
     ctx.body = user
   }
 }

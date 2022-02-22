@@ -1,9 +1,8 @@
-const { Word, Youdao, WordPlan } = require('../models/index')
+const { Word, Youdao, WordPlan, UserNoteRelation, User } = require('../models/index')
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op
 const { getYoudaoAndFormat } = require('../server/word')
 class WordCtl {
-
   // 单词列表
   async list(ctx) {
     ctx.verifyParams({
@@ -22,7 +21,7 @@ class WordCtl {
               select plan
               from wordPlans as wordPlan
               where
-                wordPlan.wordId = word.id and ${userId} = word.userId
+                wordPlan.keyWord = word.keyWord and ${userId} = word.userId
             )`),
             'plan'
           ]
@@ -170,6 +169,22 @@ class WordCtl {
       })
       ctx.status = 204
     }
+  }
+
+  // 单词本的用户们
+  async useUsers(ctx) {
+    ctx.verifyParams({
+      noteId: { type: 'string', required: true },
+    })
+    const { noteId } = ctx.request.query
+    const res = await UserNoteRelation.findAll({
+      attributes: [],
+      where: { noteId },
+      include: [
+        { model: User }
+      ]
+    })
+    ctx.body = res.map(item => item.dataValues.user)
   }
 }
 
