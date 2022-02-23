@@ -9,7 +9,7 @@ const router = new Router({prefix: '/upload'})
 const auth = jwt({ secret: _JWT_KEY_ })
 
 router.post('/illustration', auth, koaFrom({
-  uploadDir: __dirname + "/../../assets/word",  // 文件存放的位置
+  uploadDir: "/data/word/word",  // 文件存放的位置
   keepExtensions: true,  // 包含扩展名
   maxFileSize: 1024 * 1024 * 2 // 大小为 2m
 }), wordImg)
