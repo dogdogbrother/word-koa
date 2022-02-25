@@ -20,7 +20,7 @@ const Youdao = seq.define('youdao', {
   },
   // 在isWord为true时,有道过来的内容会有basic,basic.explains为数组,存的时候用转字符串
   explains: {
-    type: STRING,
+    type: STRING(3000),
     allowNull: true,
     comment: '单词的翻译,',
     get() {
@@ -78,7 +78,7 @@ const Youdao = seq.define('youdao', {
   },
   // 不一定会有,object[],key是英文,value是string[] 装的翻译,存的时候用转字符串
   web: {
-    type: STRING,
+    type: STRING(3000),
     allowNull: true,
     comment: '词义,类似于短语',
     get() {
