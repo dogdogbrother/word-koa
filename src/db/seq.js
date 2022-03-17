@@ -4,7 +4,12 @@ const { isProd } = require('../utils/env')
 const { host, user, password, database } = MYSQL_CONF
 const conf = {
   host,
-  dialect: 'mysql'
+  dialect: 'mysql',
+  dialectOptions: {
+    dateStrings: true,
+    typeCast: true
+  },
+  timezone: '+08:00'
 }
 
 // 线上环境，使用连接池
