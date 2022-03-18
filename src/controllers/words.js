@@ -124,6 +124,10 @@ class WordCtl {
     })
     const { action, keyWord } = ctx.request.body
     const { id: userId } = ctx.state.user
+
+    // 先更新用户的活跃程度
+    findAndUpdate(userId, 1)
+
     const findPlan = await WordPlan.findOne({
       where: {
         [Op.and]: [
@@ -168,9 +172,6 @@ class WordCtl {
         plan: "0",
         keyWord
       })
-      // 更新用户的活跃程度
-      findAndUpdate(userId, 1)
-      
       ctx.status = 204
     }
   }
