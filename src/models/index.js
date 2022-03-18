@@ -5,6 +5,7 @@ const Square = require('./Square')
 const UserNoteRelation = require('./UserNoteRelation')
 const Youdao = require('./Youdao')
 const WordPlan = require('./WordPlan')
+const Active = require('./Active')
 
 Note.belongsTo(User, {
   foreignKey: 'userId'
@@ -50,6 +51,10 @@ WordPlan.belongsTo(Word, {
   foreignKey: 'wordId'
 })
 
+Active.belongsTo(User, {
+  foreignKey: 'userId'
+})
+
 module.exports = {
   User,
   Note,
@@ -57,5 +62,6 @@ module.exports = {
   Square,
   UserNoteRelation,
   Youdao,
-  WordPlan
+  WordPlan,
+  Active
 }

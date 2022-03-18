@@ -2,6 +2,8 @@ const { Word, Youdao, WordPlan, UserNoteRelation, User } = require('../models/in
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op
 const { getYoudaoAndFormat } = require('../server/word')
+const { findAndUpdate } = require('../server/active')
+
 class WordCtl {
   // 单词列表
   async list(ctx) {
@@ -56,6 +58,9 @@ class WordCtl {
       keyWord,
       fileList: fileList.join(',')
     })
+    // 创建单词要增加活跃度
+    findAndUpdate(userId, 4)
+    
     ctx.status = 201
   }
 
@@ -119,6 +124,10 @@ class WordCtl {
     })
     const { action, keyWord } = ctx.request.body
     const { id: userId } = ctx.state.user
+
+    // 先更新用户的活跃程度
+    findAndUpdate(userId, 1)
+
     const findPlan = await WordPlan.findOne({
       where: {
         [Op.and]: [
@@ -151,13 +160,9 @@ class WordCtl {
         planNumber = Number(plan) + 1
       }
       await WordPlan.update(
+        { plan: planNumber.toString() },
         {
-          plan: planNumber.toString()
-        },
-        {
-          where: {
-            id
-          }
+          where: { id }
         }
       )
       return ctx.status = 204
