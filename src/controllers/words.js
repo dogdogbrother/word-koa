@@ -23,7 +23,7 @@ class WordCtl {
               select plan
               from wordPlans as wordPlan
               where
-                wordPlan.keyWord = word.keyWord and ${userId} = word.userId
+                wordPlan.keyWord = word.keyWord and ${userId} = wordPlan.userId
             )`),
             'plan'
           ]
