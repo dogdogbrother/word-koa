@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nodemon /src/app.js",
     "start": "cross-env NODE_ENV=production node ./src/app.js",
-    "sync": "node ./src/db/sync.js"
+    "sync:alter": "node ./src/db/alter-sync.js",
+    "sync:force": "node ./src/db/force-sync.js"
+    
   },
   "author": "senlin",
   "license": "ISC",
