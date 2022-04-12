@@ -6,9 +6,11 @@ class ActiveCtl {
   async yearAllActive(ctx) {
     ctx.verifyParams({
       year: { type: 'string', required: true },
+      userId: { type: 'string', required: true }
     })
-    const { id: userId } = ctx.state.user
     const { year } = ctx.params
+    const { userId } = ctx.query
+    
     const findActive = await Active.findAll({
       where: {
         [Op.and]: [

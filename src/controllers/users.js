@@ -102,7 +102,6 @@ class UsersCtl {
       // },
       // group: "keyWord",
     // })
-    // console.log(wordPlan);
     ctx.body = user
   }
 
@@ -113,15 +112,15 @@ class UsersCtl {
     ctx.body = user
   }
 
-  // 更新用户的个人信息,目前只有昵称和简介可以改
+  // 更新用户的个人信息
   async update(ctx) {
     const { id } = ctx.state.user
     ctx.verifyParams({
       nickname: { type: 'string', required: true },
     })
-    const { nickname, introduce } = ctx.request.body
+    const { nickname, introduce, autoPlay, defaultPhonetic } = ctx.request.body
     await User.update(
-      { nickname, introduce },
+      { nickname, introduce, autoPlay, defaultPhonetic  },
       { where: { id } }
     )
     const user = await getUserById(id)
