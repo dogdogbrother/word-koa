@@ -1,4 +1,4 @@
-const { User, Square, WordPlan } = require('../models/index')
+const { User, Square } = require('../models/index')
 const doCrypto = require('../utils/cryp')
 const { _JWT_KEY_ } = require('../conf/secretKeys')
 const Sequelize = require('sequelize');
@@ -118,9 +118,15 @@ class UsersCtl {
     ctx.verifyParams({
       nickname: { type: 'string', required: true },
     })
-    const { nickname, introduce, autoPlay, defaultPhonetic } = ctx.request.body
+    const { 
+      avatar,
+      nickname, 
+      introduce, 
+      autoPlay, 
+      defaultPhonetic
+    } = ctx.request.body
     await User.update(
-      { nickname, introduce, autoPlay, defaultPhonetic  },
+      { nickname, introduce, autoPlay, defaultPhonetic, avatar },
       { where: { id } }
     )
     const user = await getUserById(id)

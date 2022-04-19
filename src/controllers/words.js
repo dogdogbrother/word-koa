@@ -12,9 +12,15 @@ class WordCtl {
     })
     const { noteId } = ctx.params
     const { id: userId } = ctx.state.user
-
+    const { word, planType } = ctx.query
+    const where = { noteId }
+    if (word) {
+      where.keyWord = {
+        [Op.like]: '%' + word + '%'
+      }
+    }
     const words = await Word.findAll({
-      where: { noteId },
+      where,
       include: [{ model: Youdao }],
       attributes: {
         include: [
@@ -30,7 +36,38 @@ class WordCtl {
         ]
       }
     })
-    ctx.body = words
+    const resData = {
+      notStarted: 0,  // 没开始学
+      studying: 0, // 学习中
+      grasp: 0,  // 已掌握
+      words: []
+    }
+    // planType 的枚举有 '' | '1' | '2' | '3' todo 全部 未学习 学习中 已掌握
+    words.forEach(word => {
+      const { plan } = word.dataValues 
+      if (!plan) {
+        resData.notStarted += 1
+        if (planType === '1') {
+          resData.words.push(word.dataValues)
+        }
+      }
+      if (plan !== '6') {  // 学习中的
+        resData.studying += 1
+        if (planType === '2') {
+          resData.words.push(word.dataValues)
+        }
+      }
+      if (plan === '6') {  // 已掌握的
+        resData.grasp += 1
+        if (planType === '3') {
+          resData.words.push(word)
+        }
+      }
+    })
+    if (!planType) {
+      resData.words = words
+    }
+    ctx.body = resData
   }
 
   // 新增单词
@@ -62,6 +99,18 @@ class WordCtl {
     findAndUpdate(userId, 4)
     
     ctx.status = 201
+  }
+
+  async onDelete(ctx) {
+    ctx.verifyParams({
+      wordId: { type: 'string', required: true }
+    })
+    const { wordId } = ctx.params
+    const findWord =  await Word.findByPk(wordId)
+    if (findWord) {
+      await findWord.destroy()
+      ctx.status = 201  // 需要视图更新的状态码多少忘了 瞎写一个吧
+    } else ctx.status = 404
   }
 
   // 检查此单词本单词是否存在
