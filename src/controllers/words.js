@@ -37,12 +37,13 @@ class WordCtl {
       }
     })
     const resData = {
+      all: 0,  //全部的单词
       notStarted: 0,  // 没开始学
       studying: 0, // 学习中
       grasp: 0,  // 已掌握
       words: []
     }
-    // planType 的枚举有 '' | '1' | '2' | '3' todo 全部 未学习 学习中 已掌握
+    // planType 的枚举有 '' | '1' | '2' | '3' | '4'    全部 未学习 学习中 已掌握 除了已掌握的
     words.forEach(word => {
       const { plan } = word.dataValues 
       if (!plan) {
@@ -64,8 +65,13 @@ class WordCtl {
         }
       }
     })
+    resData.all = words.length
     if (!planType) {
       resData.words = words
+    } else if (planType === '4') {
+      resData.words = words.filter(word => {
+        return word.dataValues.plan !== '6'
+      })
     }
     ctx.body = resData
   }
