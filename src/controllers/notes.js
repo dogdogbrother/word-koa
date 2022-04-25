@@ -31,6 +31,16 @@ class NotesCtl {
     ctx.body = notes
   }
 
+  // 笔记本详情
+  async info(ctx) {
+    ctx.verifyParams({
+      noteId: { type: 'string', required: true },
+    })
+    const { noteId } = ctx.params
+    const note = await Note.findByPk(noteId)
+    ctx.body = note
+  }
+
   // 新建单词本
   async add(ctx) {
     ctx.verifyParams({

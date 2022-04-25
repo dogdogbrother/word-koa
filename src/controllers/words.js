@@ -76,6 +76,17 @@ class WordCtl {
     ctx.body = resData
   }
 
+  // 单词详情
+  async info(ctx) {
+    ctx.verifyParams({
+      wordId: { type: 'string', required: true },
+    })
+    const { wordId } = ctx.params
+    const word = await Word.findByPk(wordId, {
+      include: [{ model: Youdao }],
+    })
+    ctx.body = word
+  }
   // 新增单词
   async add(ctx) {
     ctx.verifyParams({
@@ -105,6 +116,27 @@ class WordCtl {
     findAndUpdate(userId, 4)
     
     ctx.status = 201
+  }
+
+  // 更新单词
+  async update(ctx) {
+    ctx.verifyParams({
+      wordId: { type: 'string', required: true },
+      fileList: { type: 'array', required: true },
+      wordMark: { type: 'string', required: true }
+    })
+    const { wordId } = ctx.params
+    const { fileList, wordMark } = ctx.request.body
+    const findUpdate =  await Word.update(
+      { 
+        fileList: fileList.join(','), 
+        wordMark 
+      },
+      { where: { id: wordId } } 
+    )
+    if (findUpdate.length) {
+      ctx.body = 201
+    } else ctx.status = 404
   }
 
   async onDelete(ctx) {

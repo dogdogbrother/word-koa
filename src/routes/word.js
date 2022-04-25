@@ -2,7 +2,9 @@ const Router = require('koa-router')
 const jwt = require('koa-jwt')
 const { 
   list, 
+  info,
   add, 
+  update,
   onDelete,
   checkWordExist, 
   youdao, 
@@ -16,6 +18,10 @@ const router = new Router({prefix:'/word'})
 const auth = jwt({ secret: _JWT_KEY_ })
 
 router.get('/list/:noteId', auth, list)
+
+router.get('/:wordId', auth, info)
+
+router.put('/:wordId', auth, update)
 
 router.post('/add', auth, add)
 
