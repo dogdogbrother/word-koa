@@ -21,7 +21,7 @@ router.get('/list/:noteId', auth, list)
 
 router.get('/info/:wordId', auth, info)
 
-router.put('/:wordId', auth, update)
+router.put('/info/:wordId', auth, update)
 
 router.post('/add', auth, add)
 
