@@ -9,7 +9,7 @@ const auth = jwt({ secret: _JWT_KEY_ })
 
 router.get('/', auth, list)
 
-router.get('/:noteId', auth, info)
+router.get('/info/:noteId', auth, info)
 
 router.post('/', auth, add)
 
