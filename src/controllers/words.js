@@ -51,14 +51,12 @@ class WordCtl {
         if (planType === '1') {
           resData.words.push(word.dataValues)
         }
-      }
-      if (plan !== '6') {  // 学习中的
+      } else if (plan !== '6') {  // 学习中的
         resData.studying += 1
         if (planType === '2') {
           resData.words.push(word.dataValues)
         }
-      }
-      if (plan === '6') {  // 已掌握的
+      } else if (plan === '6') {  // 已掌握的
         resData.grasp += 1
         if (planType === '3') {
           resData.words.push(word)
